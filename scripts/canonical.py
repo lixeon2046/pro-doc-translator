@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""重复文本统一规范译文表 + 分块瘦身 + 构建时套用"""
+"""重复文本统一规范译文表 + 分块瘦身 + 构建时套用（通用机制）
+
+SIG2ZH 为"签名→规范译文"数据表：签名 = 将块内所有数字替换为 # 后的文本。
+换一个领域/项目时，按相同格式重写 SIG2ZH / IDENTITY（运行 scripts/canonical.py
+会先扫描重复组并报告未覆盖签名，照提示补表即可）。
+下方数据为工业标准类文档的示例片段，可整体替换。
+"""
 import json, re, os, glob
 from collections import defaultdict, Counter
 
@@ -9,64 +15,18 @@ DOCS = _sys.argv[2:] if len(_sys.argv) > 2 else ["DOC"]
 
 # 签名 -> 规范中文（⟦Ni⟧ 与原文数字串一一对应；纯数字/符号组自动保留原文）
 SIG2ZH = {
-    "#.# General": "⟦N0⟧.⟦N1⟧ 总则",
-    "#.# Materials": "⟦N0⟧.⟦N1⟧ 材料",
-    "#.#.# General": "⟦N0⟧.⟦N1⟧.⟦N2⟧ 总则",
-    "#.#-# Equipment assemblies": "⟦N0⟧.⟦N1⟧-⟦N2⟧ 设备组件",
-    "#.#-# Offshore containers": "⟦N0⟧.⟦N1⟧-⟦N2⟧ 海上集装箱",
-    "#.#-# Portable offshore units": "⟦N0⟧.⟦N1⟧-⟦N2⟧ 便携式海上单元",
-    "(A × CD)/MGWSub < #.#\nAnd\n(MGW + A#)/MGWSub < #.#\n#.# m":
-        "(A × CD)/MGWSub < ⟦N0⟧.⟦N1⟧\n且\n(MGW + A⟦N2⟧)/MGWSub < ⟦N3⟧.⟦N4⟧\n⟦N5⟧.⟦N6⟧ m",
-    "Alloy\nTemper": "合金\n状态",
-    "Changes - current": "变更 — 现行",
-    "Condition\nRequirement": "工况\n要求",
-    "Contents": "目录",
-    "Different/additional\ncriteria (compared\nwith DNV-ST-E#)": "与DNV-ST-E⟦N0⟧\n不同/附加\n的准则",
-    "Document code\nTitle": "文件编号\n标题",
-    "Enhancement factor": "增强系数",
-    "Four leg lifting set at\nTwo leg lifting set at": "四腿吊装组件（夹角）\n两腿吊装组件（夹角）",
-    "Function\nRequirements": "功能\n要求",
-    "General requirements": "一般要求",
-    "Guidance note #:": "指导性说明⟦N0⟧：",
-    "Guidance note:": "指导性说明：",
-    "Level #": "等级⟦N0⟧",
-    "Minimum required working load limit (WLLmin)": "最低要求额定工作载荷（WLLmin）",
-    "NORSOK Z-# clause": "NORSOK Z-⟦N0⟧ 条款",
-    "Note #:": "注⟦N0⟧：",
+    # —— 通用示例（按你的文档领域重写）——
+    "#.# General": "⟦N0⟧.⟦N1⟧ 总则",                       # 章节标题
+    "Document code\nTitle": "文件编号\n标题",                # 表头
+    "Term\nDefinition": "术语\n定义",                        # 表头
+    "Topic\nReference\nDescription": "主题\n参考条款\n说明",  # 修订表表头
     "Note:": "注：",
-    "OFFSHORE CONTAINER DATA PLATE": "海上集装箱数据标牌",
-    "R#-SE\nYes #)\nNo\nNo": "R⟦N0⟧-SE\n是 ⟦N1⟧)\n否\n否",
-    "Rating": "额定值",
-    "Sec.#,": "第⟦N0⟧节，",
-    "Shackle dimension:": "卸扣尺寸：",
-    "Single leg\nsling or\nforerunner": "单腿\n吊索或\n引索",
-    "Standard — DNV-ST-E#. Edition April #, amended May #\nPage #":
-        "标准 — DNV-ST-E⟦N0⟧。⟦N1⟧年4月版，⟦N2⟧年5月修订\n第⟦N3⟧页",
-    "Standard — DNV-ST-E#. Edition August #\nPage #":
-        "标准 — DNV-ST-E⟦N0⟧。⟦N1⟧年8月版\n第⟦N2⟧页",
-    "Standard — DNV-ST-E#. Edition March #, amended December #\nPage #":
-        "标准 — DNV-ST-E⟦N0⟧。⟦N1⟧年3月版，⟦N2⟧年12月修订\n第⟦N3⟧页",
-    "Term\nDefinition": "术语\n定义",
-    "Topic\nReference\nDescription": "主题\n参考条款\n说明",
-    "Visual": "目视",
-    "Welded": "焊接",
-    "Working load limits [tonnes]\nNominal\nsize of\nsling leg":
-        "额定工作载荷 [吨]\n吊索腿\n名义\n尺寸",
-    "Yes": "是",
-    "Yield strength": "屈服强度",
-    "inspection": "检测",
-    "max.": "最大",
-    "min.": "最小",
-    "where:": "式中：",
-    "zone #:": "⟦N0⟧ 区：",
-    "— From Table #-#, find WLLmin = #.# tonnes.\n— From Table #-#, find WLLs.":
-        "— 由表⟦N0⟧-⟦N1⟧查得 WLLmin = ⟦N2⟧.⟦N3⟧ 吨。\n— 由表⟦N4⟧-⟦N5⟧查得 WLLs。",
+    "Guidance note:": "指导性说明：",
+    # 运行本脚本会列出"未覆盖签名"，照提示逐条补全即可
 }
-IDENTITY = {  # 明确保留原文
-    "DNV AS", "(HAZ)", "(Rp#.#)", "EN ISO #", "HAR/H#", "HBR/H#", "TF/T#",
-    "[N/mm#]", "[kg]", "[tonnes]",
-    "# mm < D ≤ # mm\n#\n#\n#", "R#\nD ≥ # mm\nD ≥ # mm\nD ≥ # mm\nD ≥ # mm",
-    "[mm]\n#°\n#°\n#°\n#°\n#°\n#°\n#°\n#°\n#°\n#°",
+# 明确保留原文的签名（标准号/代号/单位/纯数值表）
+IDENTITY = {
+    "EN ISO #", "[kg]", "[mm]", "[tonnes]", "(HAZ)",
 }
 
 def norm_key(t):

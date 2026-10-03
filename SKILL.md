@@ -68,6 +68,10 @@ description: 专业文档翻译师：把任意行业、任意格式（PDF/DOCX/P
 
 交付清单 + 质量指标报告（覆盖/扫描/验收/修复记录）+ 免责声明确认（除非用户豁免，封面注入"参考译本"声明）。通用启动提示词模板见 `assets/task-prompt-template.md`。
 
+## 可移植性 Portability
+
+本技能遵循开放 `SKILL.md` 规范，可被任何支持该规范的 AI agent 直接加载；不支持技能机制的 agent，把 `assets/task-prompt-template.md` 作为系统提示、`scripts/` 作为独立 CLI 工具箱即可等价执行。脚本仅依赖 Python 3.9+ 与 PyMuPDF，Windows / macOS / Linux 全平台可用（Office 路线的渲染质检需 LibreOffice 或等效转换器）。
+
 ## 硬性纪律
 
 - 全程无人值守，禁中间确认；异常自动回退并记录到构建摘要

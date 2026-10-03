@@ -11,7 +11,7 @@ import sys as _sys
 DOCS = _sys.argv[1:-1] if len(_sys.argv) > 2 else ["DOC"]
 MAXCH = 14000      # 目标块大小
 HARDMAX = 21000    # 找不到安全边界时的硬上限
-KEEP_PREFIX = "This copy of the document"
+KEEP_PREFIX = os.environ.get("KEEP_PREFIX", "This copy of the document")  # 水印/内部标记前缀，按文档设置
 
 def norm_key(t):
     return re.sub(r"\d+", "", t.replace("\xa0", " "))[:60]
@@ -42,7 +42,7 @@ def body_blocks(page):
         t = b["text"]
         if t.strip().startswith(KEEP_PREFIX): continue
         if b["size"] <= 7.6: continue                      # 页眉页脚 7pt
-        if re.match(r"^(Standard\s+—|Page\s+\d+|DNV AS|\d+/\d+|Changes|Contents$)", t.strip()): continue
+        if re.match(r"^(Standard\s+—|Page\s+\d+|\d+/\d+|Changes|Contents$)", t.strip()): continue  # 页眉页脚模式按文档调整
         out.append(b)
     return out
 
@@ -97,9 +97,8 @@ def safe_boundaries(data, cont_pages):
     return safe
 
 # 受控缩写清单（术语库）：仅对这些跟踪"全文档首次出现"的分块位置
-KNOWN_ABBREVS = ["WLL","RSL","POU","CCU","CSC","SOLAS","IMO","ISO","NDT","NDE","MPI","UT","PT","VT",
-                 "ITP","WPS","WPQR","CoG","HVAC","ATEX","ESD","UPS","NORSOK","DNV","ASME","ASNT",
-                 "ASTM","IBC","FEA","FEM","GRP","SWL","OSV","MBL","DNVGL","EN","Ex","AOD","COP","MEWP"]
+KNOWN_ABBREVS = os.environ.get("KNOWN_ABBREVS", "WLL,ISO,NDT,ITP,WPS,HVAC").split(",")
+# ⚠️ 按你的领域设置受控缩写清单（逗号分隔环境变量，或直接编辑此行）
 
 def scan_abbrevs(items):
     """items: [(chunk_idx, text)] -> {abbrev: chunk_idx首次}（仅受控清单）"""

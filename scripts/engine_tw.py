@@ -1,4 +1,4 @@
-"""DNV 标准中文版 PDF 版式还原引擎 v2（TextWriter 绘制层）
+"""专业文档 PDF 版式还原引擎 v2（TextWriter 绘制层）
 v2 关键变更：绘制统一走 TextWriter（与 Font.text_length 度量完全一致），
 修复 v1 中 insert_text 渲染宽度 ≈1.39× 预测值导致的系统性越界。
 """
