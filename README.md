@@ -2,7 +2,7 @@
 
 **Any-industry, any-format professional document translation for AI agents** — auto-builds domain glossaries, restores PDF layout 1:1, translates Office files in place, and ships with a four-fold QA + visual-acceptance loop. Works as a portable skill or as a plain prompt + toolkit with **any AI agent**, on **Windows / macOS / Linux**.
 
-**任意行业、任意格式的专业文档翻译**：自动构建领域专业词汇表，PDF 1:1 版式还原，Office 原位翻译保格式，内置四重自动 QA 与视觉验收闭环。以可移植技能或「提示词 + 工具箱」形式适配**任何 AI agent**，支持 **Windows / macOS / Linux** 全平台。由 260 页与 1,700+ 页两代大型工业标准全自动翻译项目实战淬炼而来。
+**任意行业、任意格式的专业文档翻译**：自动构建领域专业词汇表，PDF 1:1 版式还原，Office 原位翻译保格式，内置四重自动 QA 与视觉验收闭环。以可移植技能或「提示词 + 工具箱」形式适配**任何 AI agent**，支持 **Windows / macOS / Linux** 全平台。
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue) ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey) ![Agents](https://img.shields.io/badge/agents-any%20AI%20agent-8A2BE2) ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -42,15 +42,13 @@
 | 🖼️ | **截图对比验收**：复杂公式页与大型表格页自动挑选，中英并排 + 关键区域 200dpi 放大 | **Screenshot diff**: auto-picks formula/dense-table pages, side-by-side pairs + 200dpi zooms |
 | 💧 | **去除必要的水印**：第三方水印（下载站/扫描件标记）只脱字不回填，去除项入构建摘要 | **Watermark removal**: third-party watermarks redacted (drop-only), logged in build summary |
 
-## 📊 实战战绩 Proven Track Record
+## 📊 质量保证 Quality Assurance
 
-**一期** · 260 页工业标准：6,457 文本块 / 5,140 条译文，术语漂移 0、占位符残留 0、微字 0、书签 533 条中文化，视觉验收全过。
-**二期** · ASME 锅炉及压力容器规范第 VIII 卷（2025 版，1,690 页交付 + 401 页暂存）：40,000+ 文本块回填，术语库 353 条（GB/T 26929/GB 150/JB 4732 权威来源），数值与英文原版逐处核对零差错；攻克连字置换、悬挂 CTM、CropBox 错位、Logo 字体徽标、表格行序逆序、分式基线错位六类版式难题，视觉验收终审 PASS。
+术语漂移、占位符残留、微字、越界、叠印等指标以**基线对照 + 视觉验收闭环**量化管控；复杂公式页与大型表格页强制截图对比，数值与原版逐处核对。
 
-**Gen 1** · 260-page industrial standard: 6,457 blocks / 5,140 translations, zero drift, zero leaks, full acceptance.
-**Gen 2** · ASME BPVC Section VIII 2025 (1,690 pages delivered): 40,000+ blocks restored, 353-term verified glossary, zero value discrepancies vs original; solved six classes of layout traps (ligature substitution, dangling CTM, CropBox offset, glyph logos, reversed table rows, fraction-baseline shifts). Final verdict: PASS.
+Terminology drift, placeholder leaks, tiny text, overflow and overlap are controlled via baseline-diffed automated scans plus a visual-acceptance loop; formula and dense-table pages are mandatory screenshot-diff targets with value-by-value verification.
 
-## 🚀 快速开始 Quick Start
+## ## 🚀 快速开始 Quick Start
 
 ### 方式一 · 作为可移植技能 Portable skill（支持 Agent Skills 规范的 agent）
 
