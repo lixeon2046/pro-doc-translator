@@ -16,8 +16,9 @@ KEEP_PREFIX = os.environ.get("KEEP_PREFIX", "This copy of the document")  # 水�
 def norm_key(t):
     return re.sub(r"\d+", "", t.replace("\xa0", " "))[:60]
 
-TOC_LINE = re.compile(r"^(.*?)[\s.]*\.{4,}[\s.]*(\d{1,3})\s*$")
-TOC_ONLY = re.compile(r"^\.{4,}[\s.]*(\d{1,3})\s*$")
+# 线性正则：单一字符类吃掉点线，避免灾难性回溯（长目录点线曾致 CPU 爆转）
+TOC_LINE = re.compile(r"^(.*\S)[\s.]{6,}(\d{1,4})\s*$")
+TOC_ONLY = re.compile(r"^[\s.]{6,}(\d{1,4})\s*$")
 
 def preprocess(t):
     out = []
@@ -30,10 +31,21 @@ def preprocess(t):
             out.append(f"⟦P{m2.group(1)}⟧" if m2 else ln)
     return "\n".join(out)
 
+SYMBOL_RE = re.compile(r"[\d\s.,\-–—°×/%≥≤<>+=()^\[\]{}|±·∙∕'\"^~:;?!*&#$_A-Za-zÅÄÅÉÈÑÖÜαβγδεθλμπσΔΩ≈≡—–‘’“”]*")
+
+def is_symbolic(t):
+    """方程碎块/纯符号块：无长度>=4的拉丁词、无 CJK → 构建时保留原样，不入翻译分块"""
+    s = t.strip()
+    if not s or re.search(r"[\u4e00-\u9fff]", s):
+        return False
+    if re.search(r"[A-Za-z]{4,}", s):
+        return False
+    return bool(SYMBOL_RE.fullmatch(s))
+
 def is_heading(b):
     t = b["text"].strip()
-    if not b["bold"]: return False
-    return bool(re.match(r"^(SECTION [A-Z0-9]|Section \d|Appendix [A-Z]|APPENDIX [A-Z]|\d+\.\d+\s+\S|CHANGES|FOREWORD|CONTENTS|Contents)", t))
+    if not b["bold"] and b["size"] < 11: return False
+    return bool(re.match(r"^(SECTION [A-Z0-9]|Section \d|Appendix [A-Z]|APPENDIX [A-Z]|\d+\.\d+\s+\S|CHANGES|FOREWORD|CONTENTS|Contents|PART \d|Part [A-Z]{1,4}\b|ARTICLE [A-Z]{1,4}-|MANDATORY|NONMANDATORY|Annex \d|Chapter \d|[A-Z]{1,4}-\d+[A-Z]?\b)", t))
 
 def body_blocks(page):
     """过滤页眉页脚/水印后的正文块"""
@@ -47,26 +59,11 @@ def body_blocks(page):
     return out
 
 def table_continuations(dn):
-    """返回因跨页表格而不能作为边界的页码集合（1-based）"""
-    doc = fitz.open(dn + ".pdf")
-    unsafe = set()
-    prev_last = None   # 上一页最后一个表格 (x0, x1, ncols, bottom_y)
-    for pno in range(len(doc)):
-        tabs = doc[pno].find_tables()
-        cur_first = None
-        cur_last = None
-        if tabs.tables:
-            t0 = tabs.tables[0]
-            cur_first = (round(t0.bbox[0]), round(t0.bbox[2]), t0.col_count)
-            tl = tabs.tables[-1]
-            cur_last = (round(tl.bbox[0]), round(tl.bbox[2]), tl.col_count, tl.bbox[3])
-        # 上一页末表格贴近页底(>655) 且与本页首表格列几何一致 → 本页是延续页
-        if prev_last and cur_first and prev_last[3] > 655:
-            if prev_last[0] == cur_first[0] and prev_last[1] == cur_first[1] and prev_last[2] == cur_first[2]:
-                unsafe.add(pno + 1)
-        prev_last = cur_last
-    doc.close()
-    return unsafe
+    """返回因跨页表格而不能作为边界的页码集合（1-based）
+    快速通道：extract 阶段已做表格延续页检测（table_cont_pages），此处直接复用，
+    避免对上千页重复跑 find_tables（译文按块独立回填，页边界对表格翻译无害）。"""
+    ext = json.load(open(f".work/extract/{dn}.json"))
+    return set(ext.get("table_cont_pages") or [])
 
 def safe_boundaries(data, cont_pages):
     """页 p 可作为块起点（p 从 2 开始）"""
@@ -109,100 +106,107 @@ def scan_abbrevs(items):
                 first[a] = ci
     return first
 
-for dn in DOCS:
-    data = json.load(open(f".work/extract/{dn}.json"))
-    cont = table_continuations(dn)
-    sb = safe_boundaries(data, cont)
-    # 重复项占位
-    occ = defaultdict(list)
-    for p in data["pages"]:
-        for b in p["blocks"]:
-            if len(b["text"]) < 90:
-                occ[norm_key(b["text"])].append(b["text"])
-    repkeys = {k for k, v in occ.items() if len(v) >= 3}
-    vary = {}
-    for k in repkeys:
-        runs = [re.findall(r"\d+", t) for t in occ[k]]
-        maxlen = min(len(r) for r in runs)
-        vset = {i for i in range(maxlen) if len({r[i] for r in runs if len(r) > i}) > 1}
-        if vset: vary[k] = vset
-    # 预处理全部块
-    for p in data["pages"]:
-        for b in p["blocks"]:
-            b["text"] = b["text"].replace("\xa0", " ")
-    # 页组装
-    pagechars = {}
-    for p in data["pages"]:
-        c = 0
-        for b in p["blocks"]:
-            if b["text"].strip().startswith(KEEP_PREFIX): continue
-            t = preprocess(b["text"])
-            k = norm_key(b["text"])
-            c += len(t)
-        pagechars[p["page"]] = c
-    # 贪心分块：目标 MAXCH，边界优先取安全页；超过 HARDMAX 强制切分并记录
-    pages = [p["page"] for p in data["pages"]]
-    chunks = []
-    forced_bounds = []
-    cur_pages = [pages[0]]
-    cur_c = pagechars[pages[0]]
-    for p in pages[1:]:
-        if cur_c >= MAXCH and sb.get(p, (True, ""))[0]:
-            chunks.append(cur_pages); cur_pages = [p]; cur_c = pagechars[p]
-        else:
-            cur_pages.append(p); cur_c += pagechars[p]
-            # 硬上限仅在安全页强制切分；不安全页（跨页表格/段落延续）继续延伸等待安全边界
-            if cur_c >= HARDMAX and sb.get(p, (True, ""))[0]:
-                forced_bounds.append(p)
-                chunks.append(cur_pages); cur_pages = []; cur_c = 0
-    if cur_pages: chunks.append(cur_pages)
-    chunks = [c for c in chunks if c]
-    # 清理旧块文件
-    for f in glob.glob(f".work/chunks/{dn}_c*.json"): os.remove(f)
-    # 生成 chunk 文件
-    items_by_page = defaultdict(list)
-    for p in data["pages"]:
-        for b in p["blocks"]:
-            if b["text"].strip().startswith(KEEP_PREFIX): continue
-            t = preprocess(b["text"])
-            k = norm_key(b["text"])
-            if k in vary:
-                holder = {"idx": -1}
-                def sub(m, holder=holder, k=k):
-                    holder["idx"] += 1
-                    return f"⟦N{holder['idx']}⟧" if holder["idx"] in vary[k] else m.group(0)
-                t = re.sub(r"\d+", sub, t)
-            items_by_page[p["page"]].append({"id": b["id"], "page": p["page"], "text": t})
-    # 标题上下文
-    all_head = []
-    for p in data["pages"]:
-        for b in p["blocks"]:
-            if is_heading(b): all_head.append((p["page"], b["text"][:60].replace("\n", " ")))
-    # 缩写首现（按 chunk 顺序）
-    seq = []
-    for ci, pglist in enumerate(chunks):
-        for p in pglist:
-            for it in items_by_page[p]:
-                seq.append((ci, it["text"]))
-    ab_first = scan_abbrevs(seq)
-    for ci, pglist in enumerate(chunks):
-        items = [it for p in pglist for it in items_by_page[p]]
-        head = "文档起始"
-        for hp, ht in all_head:
-            if hp >= pglist[0]: break
-            head = ht
-        before_ids = [it for p in chunks[ci-1] for it in items_by_page[p]] if ci > 0 else []
-        after_ids = [it for p in chunks[ci+1] for it in items_by_page[p]] if ci < len(chunks)-1 else []
-        bb = " ⏎ ".join(it["text"] for it in before_ids[-2:])[-900:]
-        aa = " ⏎ ".join(it["text"] for it in after_ids[:1])[:400]
-        abbrs = sorted(a for a, c in ab_first.items() if c == ci)
-        out = {"doc": dn, "chunk": ci+1, "title": head,
-               "pages": [pglist[0], pglist[-1]],
-               "context_before": bb, "context_after": aa,
-               "first_abbrevs": abbrs, "items": items}
-        json.dump(out, open(f".work/chunks/{dn}_c{ci+1:02d}.json", "w"), ensure_ascii=False)
-    nb = sum(len([it for p in c for it in items_by_page[p]]) for c in chunks)
-    print(f"{dn}: {len(chunks)} chunks, {nb} items, 跨页表格保护页={sorted(cont)}, 强制切分页={forced_bounds}, 平均块字符={sum(pagechars.values())//max(1,len(chunks))}")
+def main():
+  for dn in DOCS:
+      data = json.load(open(f".work/extract/{dn}.json"))
+      cont = table_continuations(dn)
+      sb = safe_boundaries(data, cont)
+      # 重复项占位
+      occ = defaultdict(list)
+      for p in data["pages"]:
+          for b in p["blocks"]:
+              if len(b["text"]) < 90:
+                  occ[norm_key(b["text"])].append(b["text"])
+      repkeys = {k for k, v in occ.items() if len(v) >= 3}
+      vary = {}
+      for k in repkeys:
+          runs = [re.findall(r"\d+", t) for t in occ[k]]
+          maxlen = min(len(r) for r in runs)
+          vset = {i for i in range(maxlen) if len({r[i] for r in runs if len(r) > i}) > 1}
+          if vset: vary[k] = vset
+      # 预处理全部块
+      for p in data["pages"]:
+          for b in p["blocks"]:
+              b["text"] = b["text"].replace("\xa0", " ")
+      # 页组装
+      pagechars = {}
+      for p in data["pages"]:
+          c = 0
+          for b in p["blocks"]:
+              if b["text"].strip().startswith(KEEP_PREFIX): continue
+              if is_symbolic(b["text"]): continue   # 方程碎块不入分块（构建时保留原样）
+              t = preprocess(b["text"])
+              k = norm_key(b["text"])
+              c += len(t)
+          pagechars[p["page"]] = c
+      # 贪心分块：目标 MAXCH，边界优先取安全页；超过 HARDMAX 强制切分并记录
+      pages = [p["page"] for p in data["pages"]]
+      chunks = []
+      forced_bounds = []
+      cur_pages = [pages[0]]
+      cur_c = pagechars[pages[0]]
+      for p in pages[1:]:
+          if cur_c >= MAXCH and sb.get(p, (True, ""))[0]:
+              chunks.append(cur_pages); cur_pages = [p]; cur_c = pagechars[p]
+          else:
+              cur_pages.append(p); cur_c += pagechars[p]
+              # 硬上限：无条件强切（段落连续性由 context_before/after 兜底），避免块超限膨胀
+              if cur_c >= HARDMAX:
+                  forced_bounds.append(p)
+                  chunks.append(cur_pages); cur_pages = []; cur_c = 0
+      if cur_pages: chunks.append(cur_pages)
+      chunks = [c for c in chunks if c]
+      # 清理旧块文件
+      for f in glob.glob(f".work/chunks/{dn}_c*.json"): os.remove(f)
+      # 生成 chunk 文件
+      items_by_page = defaultdict(list)
+      for p in data["pages"]:
+          for b in p["blocks"]:
+              if b["text"].strip().startswith(KEEP_PREFIX): continue
+              if is_symbolic(b["text"]): continue   # 方程碎块：构建时自动保留原样
+              t = preprocess(b["text"])
+              k = norm_key(b["text"])
+              if k in vary:
+                  holder = {"idx": -1}
+                  def sub(m, holder=holder, k=k):
+                      holder["idx"] += 1
+                      return f"⟦N{holder['idx']}⟧" if holder["idx"] in vary[k] else m.group(0)
+                  t = re.sub(r"\d+", sub, t)
+              items_by_page[p["page"]].append({"id": b["id"], "page": p["page"], "text": t})
+      # 标题上下文
+      all_head = []
+      for p in data["pages"]:
+          for b in p["blocks"]:
+              if is_heading(b): all_head.append((p["page"], b["text"][:60].replace("\n", " ")))
+      # 缩写首现（按 chunk 顺序）
+      seq = []
+      for ci, pglist in enumerate(chunks):
+          for p in pglist:
+              for it in items_by_page[p]:
+                  seq.append((ci, it["text"]))
+      ab_first = scan_abbrevs(seq)
+      for ci, pglist in enumerate(chunks):
+          items = [it for p in pglist for it in items_by_page[p]]
+          head = "文档起始"
+          for hp, ht in all_head:
+              if hp >= pglist[0]: break
+              head = ht
+          before_ids = [it for p in chunks[ci-1] for it in items_by_page[p]] if ci > 0 else []
+          after_ids = [it for p in chunks[ci+1] for it in items_by_page[p]] if ci < len(chunks)-1 else []
+          bb = " ⏎ ".join(it["text"] for it in before_ids[-2:])[-900:]
+          aa = " ⏎ ".join(it["text"] for it in after_ids[:1])[:400]
+          abbrs = sorted(a for a, c in ab_first.items() if c == ci)
+          out = {"doc": dn, "chunk": ci+1, "title": head,
+                 "pages": [pglist[0], pglist[-1]],
+                 "context_before": bb, "context_after": aa,
+                 "first_abbrevs": abbrs, "items": items}
+          json.dump(out, open(f".work/chunks/{dn}_c{ci+1:02d}.json", "w"), ensure_ascii=False)
+      nb = sum(len([it for p in c for it in items_by_page[p]]) for c in chunks)
+      print(f"{dn}: {len(chunks)} chunks, {nb} items, 跨页表格保护页={sorted(cont)}, 强制切分页={forced_bounds}, 平均块字符={sum(pagechars.values())//max(1,len(chunks))}")
+
+
+if __name__ == "__main__":
+    main()
 
 
 # 用法: python3 chunk_safe.py <doc1> [doc2 ...] <workdir>  （需先运行 extract_pdf.py 与分块前处理）

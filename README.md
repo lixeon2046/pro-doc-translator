@@ -2,7 +2,7 @@
 
 **Any-industry, any-format professional document translation for AI agents** — auto-builds domain glossaries, restores PDF layout 1:1, translates Office files in place, and ships with a four-fold QA + visual-acceptance loop. Works as a portable skill or as a plain prompt + toolkit with **any AI agent**, on **Windows / macOS / Linux**.
 
-**任意行业、任意格式的专业文档翻译**：自动构建领域专业词汇表，PDF 1:1 版式还原，Office 原位翻译保格式，内置四重自动 QA 与视觉验收闭环。以可移植技能或「提示词 + 工具箱」形式适配**任何 AI agent**，支持 **Windows / macOS / Linux** 全平台。由一个 260 页工业标准全自动翻译项目实战淬炼而来。
+**任意行业、任意格式的专业文档翻译**：自动构建领域专业词汇表，PDF 1:1 版式还原，Office 原位翻译保格式，内置四重自动 QA 与视觉验收闭环。以可移植技能或「提示词 + 工具箱」形式适配**任何 AI agent**，支持 **Windows / macOS / Linux** 全平台。由 260 页与 1,700+ 页两代大型工业标准全自动翻译项目实战淬炼而来。
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue) ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey) ![Agents](https://img.shields.io/badge/agents-any%20AI%20agent-8A2BE2) ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -10,14 +10,19 @@
 
 ## ✨ 截图预览 Screenshots
 
-| 免责声明注入 Disclaimer Injection | 复杂表格 Complex Tables |
+| 公式版式对比 Formula Layout | 大型表格对比 Dense Tables |
 |---|---|
-| ![cover](docs/screenshots/01_cover_disclaimer.png) | ![table](docs/screenshots/02_complex_table.png) |
+| ![formula](docs/screenshots/04_formula_comparison.png) | ![table](docs/screenshots/05_dense_table.png) |
 
-**旋转表头矩阵 Rotated Matrix Headers**
-![matrix](docs/screenshots/03_matrix_rotated.png)
+| 表单页对比 Stamped Forms | 版权声明亮黄醒目 Yellow Disclaimer |
+|---|---|
+| ![form](docs/screenshots/06_stamp_form.png) | ![disclaimer](docs/screenshots/08_yellow_disclaimer.png) |
 
-> 左：英文原版 Left: English original · 右：中文参考译本 Right: Chinese translation（样例文档，页内右侧内部水印已裁切 internal watermark cropped for demo）
+| Logo 字形徽标保留 Glyph-logo Preserve | 旋转表头矩阵 Rotated Matrix |
+|---|---|
+| ![logo](docs/screenshots/07_logo_preserve.png) | ![matrix](docs/screenshots/03_matrix_rotated.png) |
+
+> 左：英文原版 Left: English original · 右：中文参考译本 Right: Chinese translation。公式分式基线、垫片系数大表、表单字段、内嵌 Logo 字体徽标均 1:1 保留；版权声明为默认**亮黄醒目**样式（bright-yellow style）。
 
 ---
 
@@ -31,12 +36,19 @@
 | 🔗 | **链式翻译流水线**：文档内块间串行共享实际译文衔接与术语决策日志，文档间并行 | **Chained pipelines**: serial within a document (real-translation handoff + term decision log), parallel across documents |
 | ✅ | **四重自动 QA + 视觉验收**：完整性/术语漂移/残留源语言/表格覆盖率 + 越界/微字/页脚/叠印扫描 + 渲染页面逐页裁决闭环 | **Four-fold QA + visual acceptance**: completeness/terminology drift/source-language residue/table coverage + overflow/tiny-font/footer/overlap scans + rendered-page review loop |
 | 🔁 | **无人值守**：全中间产物落盘、断点续跑、配额中断自动定时恢复 | **Unattended**: everything persisted, resumable, auto-retry timer on quota interruption |
+| 🩺 | **PDF 健康预检**：开工前自动检测连字置换/悬挂CTM/CropBox错位/Logo字体徽标/水印候选四类地雷，按检出项执行修复策略 | **PDF preflight**: auto-detects ligature substitution, dangling CTM, CropBox mismatch, glyph-logo fonts, watermark candidates |
+| 🏭 | **行业推断 + 全局词库**：从引用标准号/机构/缩写聚类推断行业（不确定时询问用户），词库按行业沉淀跨项目复用 | **Industry inference + global glossary**: infers industry from cited standards & org names (asks user when uncertain); glossaries persist per industry |
+| 🧾 | **BUILD_FIX 声明式修复**：视觉验收 fail → 精确修复记录（保留徽标/封面分层/定点译文/水印去除），禁止启发式大改 | **BUILD_FIX registry**: every visual fail becomes a declarative fix record — no heuristic rewrites |
+| 🖼️ | **截图对比验收**：复杂公式页与大型表格页自动挑选，中英并排 + 关键区域 200dpi 放大 | **Screenshot diff**: auto-picks formula/dense-table pages, side-by-side pairs + 200dpi zooms |
+| 💧 | **去除必要的水印**：第三方水印（下载站/扫描件标记）只脱字不回填，去除项入构建摘要 | **Watermark removal**: third-party watermarks redacted (drop-only), logged in build summary |
 
 ## 📊 实战战绩 Proven Track Record
 
-一个 260 页工业标准全自动翻译项目：**6,457 文本块 / 5,140 条译文**，术语漂移 0、占位符残留 0、微字 0、书签 533 条全中文化，视觉验收终审全部通过。
+**一期** · 260 页工业标准：6,457 文本块 / 5,140 条译文，术语漂移 0、占位符残留 0、微字 0、书签 533 条中文化，视觉验收全过。
+**二期** · ASME 锅炉及压力容器规范第 VIII 卷（2025 版，1,690 页交付 + 401 页暂存）：40,000+ 文本块回填，术语库 353 条（GB/T 26929/GB 150/JB 4732 权威来源），数值与英文原版逐处核对零差错；攻克连字置换、悬挂 CTM、CropBox 错位、Logo 字体徽标、表格行序逆序、分式基线错位六类版式难题，视觉验收终审 PASS。
 
-A 260-page industrial-standard project: **6,457 blocks / 5,140 translations**, zero terminology drift, zero placeholder leaks, zero sub-4.5pt text, 533 bookmarks localized, full visual acceptance.
+**Gen 1** · 260-page industrial standard: 6,457 blocks / 5,140 translations, zero drift, zero leaks, full acceptance.
+**Gen 2** · ASME BPVC Section VIII 2025 (1,690 pages delivered): 40,000+ blocks restored, 353-term verified glossary, zero value discrepancies vs original; solved six classes of layout traps (ligature substitution, dangling CTM, CropBox offset, glyph logos, reversed table rows, fraction-baseline shifts). Final verdict: PASS.
 
 ## 🚀 快速开始 Quick Start
 
@@ -72,8 +84,9 @@ python scripts/qa_scan.py ./report_zh.pdf --cjk-only         # 4) 成品扫描
 ## 🏗️ 工作流 Workflow
 
 ```
-解析 Extract → 词汇表 Glossary → 分块 Chunk → 链式翻译 Chained translation
-→ 校验 Validate → 版式回填 Layout restore → 成品QA Output QA → 视觉验收 Visual loop → 交付 Deliver
+解析路由+启动确认 Route & confirm → 健康预检 Preflight → 行业词库 Glossary → 分块 Chunk
+→ 链式翻译 Chained translation → 校验 Validate → 版式回填 Layout restore
+→ 成品QA Output QA → 截图对比 Screenshot diff → 视觉验收 Visual loop → 交付 Deliver
 ```
 
 | 脚本 Script | 用途 Purpose |
@@ -83,6 +96,9 @@ python scripts/qa_scan.py ./report_zh.pdf --cjk-only         # 4) 成品扫描
 | `scripts/canonical.py` | 高频重复文本规范译文表 Canonical recurring translations |
 | `scripts/patch_columns.py` | 列合并块拆分 Column-merged block splitting |
 | `scripts/engine_tw.py` | TextWriter 版式回填引擎 Layout restoration engine |
+| `scripts/preflight_pdf.py` | PDF 健康预检（四类陷阱+水印候选）Health preflight |
+| `scripts/build_doc.py` | 构建驱动（BUILD_FIX 声明式修复+免责声明）Build driver |
+| `scripts/visual_diff.py` | 截图对比（中英并排+局部放大）Screenshot diff |
 | `scripts/validate_trans.py` / `qa_scan.py` / `tables_coverage.py` | QA 套件 QA suite |
 
 方法论文档：[`references/`](references/)（词汇表构建协议 / PDF 引擎规范 / Office 路线 / QA 协议）

@@ -2,7 +2,7 @@
 - X_GAP 收紧至 2.0pt
 - 父块有效译文 = 分块译文 ∪ 规范译文（规范行结构与源行严格对应，优先）
 - 伪块占位符按父块原始数字序列解析（每文档独立索引，无跨文档缓存）
-- 拆分/译文写入 extract/*.json + trans/*_c99.json
+- 拆分/译文写入 extract/*.json + trans/*_cZZ.json
 前置：extract/*.json 必须为新鲜父块版（含 line_ys/line_x0s/line_ws/line_hs）
 """
 import fitz, json, re, os, glob, sys
@@ -16,12 +16,15 @@ X_GAP = 2.0
 def eff_trans(dn, ext):
     tr = {}
     for f in sorted(glob.glob(f"{BASE}/.work/trans/{dn}_c*.json")):
-        if "_c99" in f: continue
+        if "_cZZ" in f: continue
         tr.update({k: v for k, v in json.load(open(f)).items() if v})
     tr.update(canonical_mod.apply_recurring(dn, ext))
     return tr
 
 def main():
+    _fxp = os.path.join(BASE, ".work", "lys_fixmap.json")
+    global FIXMAP
+    FIXMAP = json.load(open(_fxp, encoding="utf-8")) if os.path.exists(_fxp) else {}
     for dn in DOCS:
         ext = json.load(open(f"{BASE}/.work/extract/{dn}.json"))
         tr = eff_trans(dn, ext)
@@ -64,6 +67,18 @@ def main():
                 zh = tr.get(b["id"])
                 if zh is None:
                     newblocks.append(b); continue
+                # 行序修复：分块按旧行序翻译，提取件已按 y 升序重排（lys_fixmap）
+                try:
+                    _fm = FIXMAP.get(dn, {}).get(b["id"])
+                    if _fm and "\n" in zh:
+                        _o, _p = _fm.get("order") or [], _fm.get("ph") or {}
+                        _zl = zh.split("\n")
+                        if _o and len(_zl) == len(_o):
+                            zh = "\n".join(_zl[i] for i in _o)
+                        if _p:
+                            zh = re.sub(r"⟦N(\d+)⟧", lambda m: f"⟦N{_p.get(int(m.group(1)), int(m.group(1)))}⟧", zh)
+                except Exception:
+                    pass
                 zlines = zh.split("\n")
                 if len(zlines) != len(lys):
                     newblocks.append(b); continue
@@ -91,12 +106,13 @@ def main():
                 nsplit += 1
             p["blocks"] = newblocks
         json.dump(ext, open(f"{BASE}/.work/extract/{dn}.json", "w"), ensure_ascii=False)
-        json.dump(split_trans, open(f"{BASE}/.work/trans/{dn}_c99.json", "w"), ensure_ascii=False)
+        json.dump(split_trans, open(f"{BASE}/.work/trans/{dn}_cZZ.json", "w"), ensure_ascii=False)
         nph = sum(1 for v in split_trans.values() if "⟦" in v)
         print(f"{dn}: 拆分 {nsplit} 块, 伪块译文 {len(split_trans)} 条, 未解析占位符 {nph}")
         doc.close()
 
 if __name__ == "__main__":
+    import os as _os
     _d = _os.path.dirname(_os.path.abspath(__file__))
     _sys.path.insert(0, _d)
     import canonical as canonical_mod

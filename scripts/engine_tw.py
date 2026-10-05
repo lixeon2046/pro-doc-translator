@@ -17,7 +17,7 @@ def tw(s, fs):
     return F.text_length(s, fontsize=fs)
 
 def wrap(paras, width, fs):
-    """CJK 按字、拉丁按词的贪心折行（宽度度量与 TextWriter 一致）"""
+    """CJK 按字、拉丁按词的贪心折行（宽度度量与 TextWriter 一致）+ 行首禁则回退"""
     lines = []
     for para in paras:
         if not para.strip():
@@ -43,7 +43,15 @@ def wrap(paras, width, fs):
                     else:
                         cur += seg
         lines.append(cur.rstrip())
-    return lines
+    # CJK 行首禁则：闭式标点不得起行 → 回退到上一行行尾（允许 ~1 字宽越界）
+    NO_START = "，。、；：？！”’』」〉》】〕〕·…—–-．％‰℃°×"
+    for i in range(1, len(lines)):
+        ln = lines[i]
+        while ln and ln[0] in NO_START and lines[i-1]:
+            lines[i-1] += ln[0]
+            ln = ln[1:]
+        lines[i] = ln
+    return [ln for ln in lines if ln != "" or True]
 
 def restore_digits(zh, orig):
     runs = re.findall(r"\d+", orig)
@@ -65,7 +73,12 @@ def layout_lines(zh, b, pad=1.2):
         # 单行源块：适度缩字号排成一行（下限4.7，再放不下转两行）
         if b["nlines"] == 1 and len(lines) > 1 and len(zh) <= 60:
             trial = fs
-            floor1 = max(4.7, b["size"] * 0.78) if width > 300 else 4.7
+            if width > 300:
+                floor1 = max(4.7, b["size"] * 0.78)
+            elif width < 60:
+                floor1 = 4.2        # 微型表格单元格：宁可缩至 4.2pt 也要保单行
+            else:
+                floor1 = 4.7
             while trial > floor1 and len(wrap(zh.split("\n"), width, trial)) > 1:
                 trial -= 0.25
             if len(wrap(zh.split("\n"), width, trial)) == 1:
@@ -89,31 +102,44 @@ def _para_like(b):
     return full >= max(1, int((len(lws) - 1) * 0.7))
 
 class Pen:
-    """按块缓存 TextWriter，write 时统一落色"""
+    """按块缓存 TextWriter；页内按颜色分组落色；含 CropBox 偏移补偿"""
     def __init__(self, page):
         self.page = page
-        self.t = fitz.TextWriter(page.rect)
-        self.n = 0
-        self.rot = []   # (text, point, fs, morph_matrix)
-    def add(self, x, y, s, fs, bold=False):
+        self.writers = {}   # color_key -> [TextWriter, n]
+        self.rot = []       # (text, point, fs, morph_matrix, color)
+        off = page.cropbox_position
+        self.ox, self.oy = float(off.x or 0), float(off.y or 0)
+        # TextWriter 以 MediaBox 空间解释坐标，渲染/取文以 CropBox 空间：
+        # 当 MediaBox 高于 CropBox（如 CD-ROM 方形封面 612x612 裁自 612x792），需减去差值
+        self.ox += float(page.mediabox.x0 - page.cropbox.x0)
+        self.oy += float(page.mediabox.y1 - page.cropbox.y1)
+    def _key(self, color):
+        return tuple(round(c, 3) for c in to_rgb(color))
+    def add(self, x, y, s, fs, bold=False, color=(0, 0, 0)):
         if not s: return
-        self.t.append((x, y), s, font=F, fontsize=fs)
-        self.n += 1
+        key = self._key(color)
+        if key not in self.writers:
+            self.writers[key] = [fitz.TextWriter(self.page.rect), 0]
+        w = self.writers[key][0]
+        w.append((x - self.ox, y - self.oy), s, font=F, fontsize=fs)
         if bold:
-            self.t.append((x + 0.28, y + 0.05), s, font=F, fontsize=fs)
-            self.n += 1
-    def add_rot(self, x, y, s, fs, rot, bold=False):
+            w.append((x - self.ox + 0.28, y - self.oy + 0.05), s, font=F, fontsize=fs)
+        self.writers[key][1] += 1
+    def add_rot(self, x, y, s, fs, rot, bold=False, color=(0, 0, 0)):
         if not s: return
         m = fitz.Matrix(rot)
-        self.rot.append((s, fitz.Point(x, y), fs, m))
-        self.n += 1
-    def flush(self, color):
-        if self.n:
-            self.t.write_text(self.page, color=to_rgb(color))
-        for s, p, fs, m in self.rot:
+        self.rot.append((s, fitz.Point(x - self.ox, y - self.oy), fs, m, color))
+    def flush(self, color=None):
+        for key, (w, n) in self.writers.items():
+            if n:
+                w.write_text(self.page, color=key)
+        for s, p, fs, m, c in self.rot:
             w = fitz.TextWriter(self.page.rect)
             w.append(p, s, font=F, fontsize=fs)
-            w.write_text(self.page, color=to_rgb(color), morph=(p, m))
+            w.write_text(self.page, color=to_rgb(c), morph=(p, m))
+
+def bc(b):
+    return to_rgb(b.get("color", 0))
 
 def insert_normal(page, b, zh, pen):
     x0, y0, x1, y1 = b["bbox"]
@@ -133,6 +159,10 @@ def insert_normal(page, b, zh, pen):
             if not ln: continue
             w = tw(ln, fs)
             row_h = (lys[i+1] - lys[i]) if i + 1 < nsrc else max(hs[min(i, len(hs)-1)], fs * 1.2)
+            if row_h < fs * 0.9:
+                # 同行多列碎块（相邻行 y 相同/近，如分数上下片、表格双列）：用行自身高度，
+                # 避免被 (row_h-fs)/2 项垂直抬升成假上标
+                row_h = max(hs[min(i, len(hs)-1)], fs * 1.2)
             if b["align"] == "r":
                 x = x1 - pad - w
             elif b["align"] == "c":
@@ -141,7 +171,7 @@ def insert_normal(page, b, zh, pen):
             else:
                 # 行级 x0：源行可能位于块内不同列（表格列合并块），从各自列起点起画
                 x = (lx0s[i] if lx0s and i < len(lx0s) else x0) + pad
-            pen.add(x, lys[i] + (row_h - fs) / 2 + ASC * fs, ln, fs, b["bold"])
+            pen.add(x, lys[i] + (row_h - fs) / 2 + ASC * fs, ln, fs, b["bold"], bc(b))
         return
 
     if lys and nsrc >= 3 and 1 < len(lines) < nsrc and not _para_like(b):
@@ -170,7 +200,7 @@ def insert_normal(page, b, zh, pen):
                 x = x1 - pad - w
             else:
                 x = draw_x0 + pad
-            pen.add(x, yy, ln, fs, b["bold"])
+            pen.add(x, yy, ln, fs, b["bold"], bc(b))
             yy += lh2
         return
 
@@ -202,7 +232,7 @@ def insert_normal(page, b, zh, pen):
             x = x1 - pad - w
         else:
             x = draw_x0 + pad
-        pen.add(x, y, ln, fs, b["bold"])
+        pen.add(x, y, ln, fs, b["bold"], bc(b))
         y += lh
 
 def insert_rot(page, b, zh, pen):
@@ -216,13 +246,24 @@ def insert_rot(page, b, zh, pen):
         if rot == 90:
             x = x1 - 0.8 - i * lh
             y = y1 - 1.0
-            pen.add_rot(x, y, ln, fs, 90, b["bold"])
+            pen.add_rot(x, y, ln, fs, 90, b["bold"], bc(b))
         else:
             x = x0 + 0.8 + i * lh
             y = y0 + 1.0
-            pen.add_rot(x, y, ln, fs, 270, b["bold"])
+            pen.add_rot(x, y, ln, fs, 270, b["bold"], bc(b))
 
 PMARK = re.compile(r"⟦P(\d+)⟧")
+
+SYMBOL_RE = re.compile(r"[\d\s.,\-–—°×/%≥≤<>+=()^\[\]{}|±·∙∕'\"^~:;?!*&#$_A-Za-zÅÄÅÉÈÑÖÜαβγδεθλμπσΔΩ≈≡—–‘’“”]*")
+
+def is_symbolic(t):
+    """方程碎块/纯符号块（无>=4字母拉丁词、无CJK）→ 无译文时保留原样重绘"""
+    s = t.strip()
+    if not s or re.search(r"[\u4e00-\u9fff]", s):
+        return False
+    if re.search(r"[A-Za-z]{4,}", s):
+        return False
+    return bool(SYMBOL_RE.fullmatch(s))
 
 def insert_toc(page, b, zh, pen):
     x0, y0, x1, y1 = b["bbox"]
@@ -238,7 +279,7 @@ def insert_toc(page, b, zh, pen):
         segs = wrap([raw], x1 - x0 - 4, fs) if raw else [""]
         for si, seg in enumerate(segs):
             last = (si == len(segs) - 1)
-            pen.add(x0, y, seg, fs, b["bold"])
+            pen.add(x0, y, seg, fs, b["bold"], bc(b))
             if last and num is not None:
                 nw = tw(num, fs)
                 nx = x1 - nw
@@ -246,20 +287,27 @@ def insert_toc(page, b, zh, pen):
                 n = max(0, int((nx - 3 - sx) / tw(".", fs)))
                 dots = "." * n
                 if dots:
-                    pen.add(sx, y, dots, fs, False)
-                pen.add(nx, y, num, fs, b["bold"])
+                    pen.add(sx, y, dots, fs, False, bc(b))
+                pen.add(nx, y, num, fs, b["bold"], bc(b))
             y += lh
 
 def is_toc(b, zh):
     return bool(PMARK.search(zh))
 
-def build(doc_name, trans, out_path, keep_prefix="This copy of the document", extract_path=None, pdf_path=None):
-    """trans: {block_id: 中文 or None}"""
+def build(doc_name, trans, out_path, keep_prefix="This copy of the document", extract_path=None, pdf_path=None, drop_prefixes=()):
+    """trans: {block_id: 中文 or None}
+    keep_prefix:   命中前缀的块保留原文不译（内部标记/水印保留类）
+    drop_prefixes: 命中前缀的块只脱字不回填（去除必要的水印）"""
     data = json.load(open(extract_path or f".work/extract/{doc_name}.json"))
     doc = fitz.open(pdf_path or (doc_name + ".pdf"))
     stats = {"redrawn": 0, "kept": 0, "hl": 0, "shrunk": 0}
     for p in data["pages"]:
         page = doc[p["page"] - 1]
+        # 内容流平衡化：老 PDF（如 CD-ROM 封面）可能悬挂 CTM，追加文本会继承残留变换而整体错位
+        try:
+            page.clean_contents()
+        except Exception:
+            pass
         blocks = p["blocks"]
         # 表格单元格边界：用于将窄块 bbox 扩展到所在单元格全宽
         try:
@@ -276,9 +324,15 @@ def build(doc_name, trans, out_path, keep_prefix="This copy of the document", ex
             if b["text"].strip().startswith(keep_prefix):
                 stats["kept"] += 1
                 continue
+            if drop_prefixes and b["text"].strip().startswith(tuple(drop_prefixes)):
+                r = fitz.Rect(b["bbox"]) + (-0.5, -0.5, 0.5, 0.5)
+                page.add_redact_annot(r, fill=False)
+                stats["redrawn"] += 1
+                continue
             zh = trans.get(b["id"], None)
-            if zh is None and re.fullmatch(r"[\d\s.,\-–—°×/%≥≤<>+=()^\[\]]+", b["text"].strip() or "x"):
-                zh = b["text"].strip()   # 纯数字/符号：原样绘制
+            if zh is None and (re.fullmatch(r"[\d\s.,\-–—°×/%≥≤<>+=()^\[\]]+", b["text"].strip() or "x")
+                               or is_symbolic(b["text"])):
+                zh = b["text"].strip()   # 纯数字/方程符号碎块：原样绘制
             if zh is None:
                 stats["hl"] += 1
                 continue
@@ -334,28 +388,33 @@ def build(doc_name, trans, out_path, keep_prefix="This copy of the document", ex
     doc.close()
     return stats
 
-def add_disclaimer(pdf_path, text=None, rect=None, title="声　明"):
+def add_disclaimer(pdf_path, text=None, rect=None, title="版 权 声 明", style="yellow"):
+    """封面免责/版权声明。style:
+      yellow（默认）— 亮黄底 + 深红边框 + 深红标题，醒目声明（用户可指定文案）
+      plain         — 米色低调样式（适合封面留白紧张的文档）"""
     TEXT = text or ("声明：本翻译版本仅供参考与学习交流使用，任何针对技术标准、工程规范及合规要求的解读与执行，"
                     "均须以原发布机构的官方原版文件为准。原文件及相关内容的所有版权均归原作者/机构所有。")
-    x0d, y0d, x1d, y1d = rect or (57, 545, 555, 655)
     doc = fitz.open(pdf_path)
     page = doc[0]
+    x0d, y0d, x1d, y1d = rect or (55, 630, 557, 772)
     x0, y0, x1, y1 = x0d, y0d, x1d, y1d
-    page.draw_rect(fitz.Rect(x0, y0, x1, y1), color=(0.06, 0.13, 0.29), fill=(0.99, 0.98, 0.94), width=1.4, radius=0.04)
-    fs = 9.6
-    inner = x1 - x0 - 44
-    lines = wrap([TEXT], inner, fs)
+    if style == "yellow":
+        edge, fill, tcol, bcol = (0.55, 0, 0), (1, 1, 0), (0.55, 0, 0), (0.05, 0.05, 0.05)
+        tfs, bfs, bw = 13.5, 9.6, 2.6
+    else:
+        edge, fill, tcol, bcol = (0.06, 0.13, 0.29), (0.99, 0.98, 0.94), (0.06, 0.13, 0.29), (0.06, 0.13, 0.29)
+        tfs, bfs, bw = 11.5, 9.6, 1.4
+    page.draw_rect(fitz.Rect(x0, y0, x1, y1), color=edge, fill=fill, width=bw, radius=0.025)
     pen = Pen(page)
-    ty = y0 + 30
-    title = "声　明"
-    tlen = tw(title, 11.5)
-    tx = x0 + 22 + max(0, (inner - tlen) / 2)
-    pen.add(tx, ty, "声　明" if title == "声　明" else title, 11.5, True)
-    ty += 28
-    for ln in lines:
-        pen.add(x0 + 22, ty, ln, fs, False)
-        ty += fs * 1.75
-    pen.flush((0.06, 0.13, 0.29))
+    inner = x1 - x0 - 44
+    ty = y0 + 16 + tfs
+    tw_len = tw(title, tfs)
+    pen.add(x0 + (x1 - x0 - tw_len) / 2, ty, title, tfs, True, tcol)
+    ty += tfs * 1.55
+    for ln in wrap([TEXT], inner, bfs):
+        pen.add(x0 + 22, ty, ln, bfs, False, bcol)
+        ty += bfs * 1.5
+    pen.flush()
     doc.saveIncr()
     doc.close()
 
