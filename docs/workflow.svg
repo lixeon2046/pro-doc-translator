@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 450" style="width:100%; height:auto; display:block; margin:0 auto;" pointer-events="all">
+  <style>
+    text { user-select: none; pointer-events: none; stroke: none; paint-order: fill; }
+  </style>
+  <rect x="0" y="0" width="640" height="450" rx="12" fill="#f2f0f0"/>
+        <defs>
+          <!-- Caret marker definition -->
+          <marker id="lumi-caret" viewBox="0 0 10 10" refX="7.5" refY="5"
+                  markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto">
+            <path d="M 3 1.2 L 7.5 5 L 3 8.8" fill="none" stroke="#000000"
+                  stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+          <!-- Active Caret marker definition -->
+          <marker id="lumi-caret-active" viewBox="0 0 10 10" refX="7.5" refY="5"
+                  markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto">
+            <path d="M 3 1.2 L 7.5 5 L 3 8.8" fill="none" stroke="#3186ff"
+                  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <!-- PHASE BANDS / BACKGROUND REGIONS -->
+        <g id="phaseBands">
+          <!-- Phase 1: Setup -->
+          <rect x="12" y="12" width="616" height="84" rx="8" class="phase-bg" fill="#ffffff" fill-opacity="0.5" stroke="#e3e3e3" stroke-dasharray="2 2"/>
+          <text x="24" y="32" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-weight="500">STAGE 01 · 立项预处理 (Setup)</text>
+
+          <!-- Phase 2: Core Processing -->
+          <rect x="12" y="108" width="616" height="84" rx="8" class="phase-bg" fill="#ffffff" fill-opacity="0.5" stroke="#e3e3e3" stroke-dasharray="2 2"/>
+          <text x="24" y="128" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-weight="500">STAGE 02 · 核心翻译 (Core Processing)</text>
+
+          <!-- Phase 3: DTP &amp; QA -->
+          <rect x="12" y="204" width="616" height="144" rx="8" class="phase-bg" fill="#ffffff" fill-opacity="0.5" stroke="#e3e3e3" stroke-dasharray="2 2"/>
+          <text x="24" y="224" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-weight="500">STAGE 03 · 排版与视效验证 (DTP &amp; QA)</text>
+
+          <!-- Phase 4: Delivery -->
+          <rect x="12" y="360" width="616" height="76" rx="8" class="phase-bg" fill="#ffffff" fill-opacity="0.5" stroke="#e3e3e3" stroke-dasharray="2 2"/>
+          <text x="24" y="380" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-weight="500">STAGE 04 · 最终交付 (Delivery)</text>
+        </g>
+
+        <!-- CONNECTORS / EDGES -->
+        <g id="edgesGroup">
+          <!-- 1 -> 2 -->
+          <line id="edge-1-2" class="edge-path animated-edge" x1="288" y1="56" x2="332" y2="56" fill="none" stroke="#000000" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="0 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+
+          <!-- 2 -> 3 (Row 1 to Row 2) -->
+          <path id="edge-2-3" class="edge-path animated-edge" d="M 480 56 L 580 56 Q 596 56 596 72 L 596 112 Q 596 124 580 124 L 84 124 Q 68 124 68 136 L 68 152" fill="none" stroke="#000000" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="0 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+
+          <!-- 3 -> 4 -->
+          <line id="edge-3-4" class="edge-path animated-edge" x1="208" y1="152" x2="236" y2="152" fill="none" stroke="#000000" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="0 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+
+          <!-- 4 -> 5 -->
+          <line id="edge-4-5" class="edge-path animated-edge" x1="360" y1="152" x2="388" y2="152" fill="none" stroke="#000000" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="0 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+
+          <!-- 5 -> 6 -->
+          <line id="edge-5-6" class="edge-path animated-edge" x1="512" y1="152" x2="528" y2="152" fill="none" stroke="#000000" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="0 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+
+          <!-- 6 -> 7 (Row 2 to Row 3) -->
+          <path id="edge-6-7" class="edge-path animated-edge" d="M 580 170 L 580 208 Q 580 220 564 220 L 84 220 Q 68 220 68 232 L 68 248" fill="none" stroke="#000000" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="0 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+
+          <!-- 7 -> 8 -->
+          <line id="edge-7-8" class="edge-path animated-edge" x1="208" y1="248" x2="236" y2="248" fill="none" stroke="#000000" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="0 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+
+          <!-- 8 -> 9 -->
+          <line id="edge-8-9" class="edge-path animated-edge" x1="360" y1="248" x2="388" y2="248" fill="none" stroke="#000000" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="0 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+
+          <!-- 9 -> 10 -->
+          <line id="edge-9-10" class="edge-path animated-edge" x1="512" y1="248" x2="528" y2="248" fill="none" stroke="#000000" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="0 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+
+          <!-- FEEDBACK LOOP: 10 -> 7 (Dashed Re-work Feedback) -->
+          <!-- From Node 10 bottom (x=580, y=266) down to y=318, left to x=138, up to Node 7 bottom (x=138, y=266) -->
+          <path id="edge-10-7" class="edge-path animated-edge" d="M 580 266 L 580 306 Q 580 318 564 318 L 154 318 Q 138 318 138 306 L 138 274" fill="none" stroke="#727676" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="4 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+
+          <!-- Feedback Loop Label Pill -->
+          <g id="pill-10-7" class="edge-path" pointer-events="none">
+            <rect x="300" y="308" width="108" height="20" rx="10" fill="#ffffff" stroke="#727676" stroke-width="0.8"/>
+            <text x="354" y="322" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-style="italic" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" text-anchor="middle">↺ 打回重修 (Re-work)</text>
+          </g>
+
+          <!-- 10 -> 11 (Row 3 to Row 4 Delivery) -->
+          <path id="edge-10-11" class="edge-path animated-edge" d="M 612 248 L 620 248 Q 630 248 630 260 L 630 350 Q 630 398 600 398 L 332 398" fill="none" stroke="#000000" stroke-width="1.3" stroke-linecap="round" stroke-dasharray="0 4" marker-end="url(#lumi-caret)" pointer-events="none"/>
+        </g>
+
+        <!-- NODES GROUP -->
+        <g id="nodesGroup">
+          <!-- NODE 1 -->
+          <g id="node-1" class="node-group" data-id="1" data-phase="01 · 立项预处理" data-title="解析路由+启动确认" data-sub="Route &amp; confirm" data-desc="识别文件类型、解析文档结构与项目参数，触发引擎启动确认">
+            <rect class="node-rect" x="138" y="38" width="142" height="36" rx="18" fill="#f2f0f0" stroke="#727676" stroke-width="1"/>
+            <text x="209" y="52" fill="#000000" font-size="13" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">1. 解析路由+启动确认</text>
+            <text x="209" y="65" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Route &amp; confirm</text>
+          </g>
+
+          <!-- NODE 2 -->
+          <g id="node-2" class="node-group" data-id="2" data-phase="01 · 立项预处理" data-title="健康预检" data-sub="Preflight" data-desc="检查文本完整性、字符编码、占位符语法及待译内容健康度">
+            <rect class="node-rect" x="340" y="38" width="132" height="36" rx="18" fill="#f2f0f0" stroke="#727676" stroke-width="1"/>
+            <text x="406" y="52" fill="#000000" font-size="13" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">2. 健康预检</text>
+            <text x="406" y="65" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Preflight</text>
+          </g>
+
+          <!-- NODE 3 -->
+          <g id="node-3" class="node-group" data-id="3" data-phase="02 · 核心翻译" data-title="行业词库" data-sub="Glossary" data-desc="检索并匹配专业领域术语库、专有名词与禁用词规则">
+            <rect class="node-rect" x="68" y="134" width="132" height="36" rx="18" fill="#f2f0f0" stroke="#727676" stroke-width="1"/>
+            <text x="134" y="148" fill="#000000" font-size="13" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">3. 行业词库</text>
+            <text x="134" y="161" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Glossary</text>
+          </g>
+
+          <!-- NODE 4 -->
+          <g id="node-4" class="node-group" data-id="4" data-phase="02 · 核心翻译" data-title="分块" data-sub="Chunk" data-desc="将长文本按语义语境切分为最优上下文段落切片">
+            <rect class="node-rect" x="244" y="134" width="108" height="36" rx="18" fill="#f2f0f0" stroke="#727676" stroke-width="1"/>
+            <text x="298" y="148" fill="#000000" font-size="13" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">4. 分块</text>
+            <text x="298" y="161" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Chunk</text>
+          </g>
+
+          <!-- NODE 5 -->
+          <g id="node-5" class="node-group" data-id="5" data-phase="02 · 核心翻译" data-title="链式翻译" data-sub="Chained translation" data-desc="大模型上下文连贯翻译，确保句间衔接与行业地道表达">
+            <rect class="node-rect" x="396" y="134" width="108" height="36" rx="18" fill="#f2f0f0" stroke="#727676" stroke-width="1"/>
+            <text x="450" y="148" fill="#000000" font-size="13" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">5. 链式翻译</text>
+            <text x="450" y="161" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Chained trans.</text>
+          </g>
+
+          <!-- NODE 6 -->
+          <g id="node-6" class="node-group" data-id="6" data-phase="02 · 核心翻译" data-title="校验" data-sub="Validate" data-desc="自动校验数字、漏译、标点符号、标签闭合及格式规范">
+            <rect class="node-rect" x="536" y="134" width="88" height="36" rx="18" fill="#f2f0f0" stroke="#727676" stroke-width="1"/>
+            <text x="580" y="148" fill="#000000" font-size="13" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">6. 校验</text>
+            <text x="580" y="161" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Validate</text>
+          </g>
+
+          <!-- NODE 7 -->
+          <g id="node-7" class="node-group" data-id="7" data-phase="03 · 排版与视效验证" data-title="版式回填" data-sub="Layout restore" data-desc="将译文无损填充回原始文档/UI模板，恢复排版与样式">
+            <rect class="node-rect" x="68" y="230" width="132" height="36" rx="18" fill="#f2f0f0" stroke="#727676" stroke-width="1"/>
+            <text x="134" y="244" fill="#000000" font-size="13" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">7. 版式回填</text>
+            <text x="134" y="257" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Layout restore</text>
+          </g>
+
+          <!-- NODE 8 -->
+          <g id="node-8" class="node-group" data-id="8" data-phase="03 · 排版与视效验证" data-title="成品QA" data-sub="Output QA" data-desc="针对排版溢出、文本截断、换行异常进行规则化QA检查">
+            <rect class="node-rect" x="244" y="230" width="108" height="36" rx="18" fill="#f2f0f0" stroke="#727676" stroke-width="1"/>
+            <text x="298" y="244" fill="#000000" font-size="13" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">8. 成品QA</text>
+            <text x="298" y="257" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Output QA</text>
+          </g>
+
+          <!-- NODE 9 -->
+          <g id="node-9" class="node-group" data-id="9" data-phase="03 · 排版与视效验证" data-title="截图对比" data-sub="Screenshot diff" data-desc="渲染UI/文档界面截图，与源语言视图进行像素级Diff对比">
+            <rect class="node-rect" x="396" y="230" width="108" height="36" rx="18" fill="#f2f0f0" stroke="#727676" stroke-width="1"/>
+            <text x="450" y="244" fill="#000000" font-size="13" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">9. 截图对比</text>
+            <text x="450" y="257" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Screenshot diff</text>
+          </g>
+
+          <!-- NODE 10 -->
+          <g id="node-10" class="node-group" data-id="10" data-phase="03 · 排版与视效验证" data-title="视觉验收" data-sub="Visual loop" data-desc="视觉效果综合评级，若存在严重美观度/截断问题则打回步骤7重修">
+            <rect class="node-rect" x="536" y="230" width="88" height="36" rx="18" fill="#f2f0f0" stroke="#727676" stroke-width="1"/>
+            <text x="580" y="244" fill="#000000" font-size="13" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">10. 视觉验收</text>
+            <text x="580" y="257" fill="rgba(0, 0, 0, 0.55)" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Visual loop</text>
+          </g>
+
+          <!-- NODE 11 (PROMOTED HERO) -->
+          <g id="node-11" class="node-group" data-id="11" data-phase="04 · 最终交付" data-title="交付" data-sub="Deliver" data-desc="导出高品质成品目标文档、双语语料库与术语更新日志">
+            <rect class="node-rect" x="180" y="380" width="144" height="38" rx="19" fill="#dcf1ff" stroke="#3186ff" stroke-width="1.5"/>
+            <text x="252" y="396" fill="#000000" font-size="14" font-weight="500" font-family="'Google Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif" text-anchor="middle">11. 最终交付</text>
+            <text x="252" y="409" fill="#3186ff" font-size="12" font-family="ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace" font-style="italic" text-anchor="middle">Deliver</text>
+          </g>
+        </g>
+      </svg>

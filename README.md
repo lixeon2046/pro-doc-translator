@@ -81,11 +81,9 @@ python scripts/qa_scan.py ./report_zh.pdf --cjk-only         # 4) 成品扫描
 
 ## 🏗️ 工作流 Workflow
 
-```
-解析路由+启动确认 Route & confirm → 健康预检 Preflight → 行业词库 Glossary → 分块 Chunk
-→ 链式翻译 Chained translation → 校验 Validate → 版式回填 Layout restore
-→ 成品QA Output QA → 截图对比 Screenshot diff → 视觉验收 Visual loop → 交付 Deliver
-```
+![翻译与本地化工作流 Translation & Localization Pipeline](docs/workflow.svg)
+
+> 交互式版本 Interactive version：[`docs/workflow.html`](docs/workflow.html) — 悬停任意节点可高亮其上游/下游链路。Hover a node to highlight its upstream/downstream chain.
 
 | 脚本 Script | 用途 Purpose |
 |---|---|
