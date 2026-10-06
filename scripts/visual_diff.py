@@ -57,7 +57,7 @@ def pair_image(src_pdf, out_pdf, pno, dpi, path, label_gap=10):
 
 def crop_zoom(pdf, pno, rect, dpi, path):
     """裁剪放大。rect 为渲染视图（用户所见方向）的 pt 坐标：整页渲染后按像素裁剪，
-    规避 /Rotate 页面视图坐标 vs 未旋转坐标的换算歧义（div.3 旋转表格页实测踩坑）。"""
+    规避 /Rotate 页面视图坐标 vs 未旋转坐标的换算歧义（旋转表格页实测踩坑）。"""
     from PIL import Image
     d = pymupdf.open(pdf)
     pix = d[pno - 1].get_pixmap(dpi=dpi)
