@@ -351,6 +351,7 @@ def build(doc_name, trans, out_path, keep_prefix="This copy of the document", ex
         except Exception:
             cell_rects = []
         todo = []
+        ndrop = 0
         for b in blocks:
             if b["text"].strip().startswith(keep_prefix):
                 stats["kept"] += 1
@@ -371,6 +372,7 @@ def build(doc_name, trans, out_path, keep_prefix="This copy of the document", ex
                 r = fitz.Rect(b["bbox"]) + (-0.5, -0.5, 0.5, 0.5)
                 page.add_redact_annot(r, fill=False)
                 stats["redrawn"] += 1
+                ndrop += 1
                 continue
             zh = restore_digits(zh, b["text"])
             if re.search(r"⟦N\d", zh):
@@ -397,7 +399,8 @@ def build(doc_name, trans, out_path, keep_prefix="This copy of the document", ex
         for b in todo:
             r = fitz.Rect(b["bbox"]) + (-0.5, -0.5, 0.5, 0.5)
             page.add_redact_annot(r, fill=False)
-        if todo:
+        if todo or ndrop:
+            # 整页全部 __DROP__ 时 todo 为空，但脱字标注仍需执行（否则源文本残留）
             page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_NONE,
                                   graphics=fitz.PDF_REDACT_LINE_ART_NONE,
                                   text=fitz.PDF_REDACT_TEXT_REMOVE)
