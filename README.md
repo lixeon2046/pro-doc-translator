@@ -1,6 +1,13 @@
 # pro-doc-translator · 专业文档翻译师
 
-> **版本 v2.1** · 新增：PDF 健康预检 · 旋转90°表格三层锚定 · BUILD_FIX 声明式修复 · 截图对比验收 · 去除必要的水印 · 行业推断 + 全局词库
+> **版本 v2.1 / Version v2.1** · 新增 What's new：
+>
+> - PDF 健康预检 PDF health preflight（连字置换 / 悬挂 CTM / CropBox 错位 / Logo 字体徽标 / 水印候选 ligature substitution, dangling CTM, CropBox mismatch, glyph-logo fonts, watermark candidates）
+> - 旋转90°表格三层锚定 Three-tier anchoring for 90°-rotated tables（逐行条带落位 + 短标签居中 + 行数 1:1 红线 per-line strip placement, centered short labels, strict 1:1 line rule）
+> - BUILD_FIX 声明式修复 Declarative BUILD_FIX repairs（徽标保留 / 封面分层 / 定点译文 / 水印去除 logo preserve, cover split, targeted overrides, watermark removal）
+> - 截图对比验收 Screenshot-diff acceptance（公式页与大型表格页必抽，中英并排 + 200dpi 放大 mandatory for formula & dense-table pages, side-by-side + 200dpi zooms）
+> - 去除必要的水印 Third-party watermark removal（只脱字不回填，去除项入摘要 redact-only, logged in build summary）
+> - 行业推断 + 全局词库 Industry inference + per-industry glossary library（不确定时询问用户 asks the user when uncertain）
 
 **Any-industry, any-format professional document translation for AI agents** — auto-builds domain glossaries, restores PDF layout 1:1, translates Office files in place, and ships with a four-fold QA + visual-acceptance loop. Works as a portable skill or as a plain prompt + toolkit with **any AI agent**, on **Windows / macOS / Linux**.
 
