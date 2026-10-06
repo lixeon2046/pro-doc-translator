@@ -41,26 +41,31 @@ def auto_pick(src, k=4):
     return picked
 
 
-def pair_image(src_pdf, out_pdf, pno, dpi, path, label_gap=8):
+def pair_image(src_pdf, out_pdf, pno, dpi, path, label_gap=10):
+    from PIL import Image
     a, b = pymupdf.open(src_pdf), pymupdf.open(out_pdf)
-    pa, pb = a[pno - 1], b[pno - 1]
-    ia = pa.get_pixmap(dpi=dpi)
-    ib = pb.get_pixmap(dpi=dpi)
-    h = max(ia.height, ib.height)
-    canvas = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, ia.width + label_gap + ib.width, h))
-    canvas.clear_with(255)
-    canvas.copy(ia, pymupdf.IRect(0, 0, ia.width, ia.height))
-    canvas.copy(ib, pymupdf.IRect(ia.width + label_gap, 0,
-                                  ia.width + label_gap + ib.width, ib.height))
-    canvas.save(path)
+    ia, ib = a[pno - 1].get_pixmap(dpi=dpi), b[pno - 1].get_pixmap(dpi=dpi)
+    A = Image.frombytes("RGB", (ia.width, ia.height), ia.samples)
+    B = Image.frombytes("RGB", (ib.width, ib.height), ib.samples)
+    h = max(A.height, B.height)
+    canvas = Image.new("RGB", (A.width + label_gap + B.width, h), "white")
+    canvas.paste(A, (0, 0))
+    canvas.paste(B, (A.width + label_gap, 0))
+    canvas.save(path, optimize=True)
     a.close(); b.close()
 
 
 def crop_zoom(pdf, pno, rect, dpi, path):
+    """裁剪放大。rect 为渲染视图（用户所见方向）的 pt 坐标：整页渲染后按像素裁剪，
+    规避 /Rotate 页面视图坐标 vs 未旋转坐标的换算歧义（div.3 旋转表格页实测踩坑）。"""
+    from PIL import Image
     d = pymupdf.open(pdf)
-    pix = d[pno - 1].get_pixmap(dpi=dpi, clip=pymupdf.Rect(*rect))
-    pix.save(path)
+    pix = d[pno - 1].get_pixmap(dpi=dpi)
     d.close()
+    im = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+    k = dpi / 72.0
+    x0, y0, x1, y1 = [int(v * k) for v in rect]
+    im.crop((max(0, x0), max(0, y0), min(pix.width, x1), min(pix.height, y1))).save(path, optimize=True)
 
 
 def main():

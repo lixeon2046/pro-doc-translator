@@ -148,7 +148,7 @@ class Builder:
         if not os.path.exists(src_pdf):
             src_pdf = f"{dn}.pdf"
         stats = engine_tw.build(dn, trans, out_pdf, extract_path=ext, pdf_path=src_pdf,
-                                drop_prefixes=drop_prefixes or tuple(fix.get("drop_prefixes") or ()))
+                                drop_prefixes=drop_prefixes or tuple(fixd.get("drop_prefixes") or ()))
         print(f"chunks merged; build stats: {stats}")
         if disclaimer:
             engine_tw.add_disclaimer(out_pdf, text=disclaimer, rect=disclaimer_rect,

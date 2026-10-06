@@ -1,5 +1,7 @@
 # pro-doc-translator · 专业文档翻译师
 
+> **版本 v2.1** · 新增：PDF 健康预检 · 旋转90°表格三层锚定 · BUILD_FIX 声明式修复 · 截图对比验收 · 去除必要的水印 · 行业推断 + 全局词库
+
 **Any-industry, any-format professional document translation for AI agents** — auto-builds domain glossaries, restores PDF layout 1:1, translates Office files in place, and ships with a four-fold QA + visual-acceptance loop. Works as a portable skill or as a plain prompt + toolkit with **any AI agent**, on **Windows / macOS / Linux**.
 
 **任意行业、任意格式的专业文档翻译**：自动构建领域专业词汇表，PDF 1:1 版式还原，Office 原位翻译保格式，内置四重自动 QA 与视觉验收闭环。以可移植技能或「提示词 + 工具箱」形式适配**任何 AI agent**，支持 **Windows / macOS / Linux** 全平台。

@@ -237,20 +237,51 @@ def insert_normal(page, b, zh, pen):
 
 def insert_rot(page, b, zh, pen):
     x0, y0, x1, y1 = b["bbox"]
-    fs = min(b["size"], max(5.0, (x1 - x0) * 0.72))
-    length = (y1 - y0) - 2
-    lines = wrap(zh.split("\n"), length, fs)
-    lh = fs * 1.22
+    lys = b.get("line_ys") or []
+    lhs = b.get("line_hs") or []
+    x0s = b.get("line_x0s") or []
+    zh_lines = zh.split("\n")
     rot = b["rot"]
+
+    # 逐行锚定模式：旋转表格的行=竖排单元格，各有独立起点与跨度（line_ys/line_hs/line_x0s）。
+    # 短标签（表头词组）在源行跨度内【居中】——中文更短时底锚会产生阶梯漂移；
+    # 长文本（L ≥ 72% 跨度，如通栏表题/整段注释）保持端部锚定（原版排布）；
+    # 跨行溢出（厚度范围行等）随之对称分布。
+    if len(lys) == len(zh_lines) and len(lys) >= 1:
+        for i, raw in enumerate(zh_lines):
+            if not raw.strip():
+                continue
+            span = lhs[i] if i < len(lhs) else (y1 - y0)
+            strip_x = x0s[i] if i < len(x0s) else x0
+            strip_w = max(4.0, (x1 - x0) - (strip_x - x0))
+            fs = max(4.6, min(b["size"], strip_w * 0.95))
+            L = tw(raw, fs)
+            if rot == 90:
+                anchor = (lys[i] + span - 1.0) if L >= span * 0.72 else \
+                         (lys[i] + span / 2 + L / 2 - fs * 0.18)
+                xc = strip_x + strip_w / 2 - fs * 0.4
+                pen.add_rot(xc, anchor, raw, fs, 90, b["bold"], bc(b))
+            else:
+                anchor = (lys[i] + 1.0) if L >= span * 0.72 else \
+                         (lys[i] + span / 2 - L / 2 + fs * 0.85)
+                xc = strip_x + strip_w / 2 - fs * 0.4
+                pen.add_rot(xc, anchor, raw, fs, 270, b["bold"], bc(b))
+        return
+
+    # 堆叠模式（散文段/行数不匹配）：真折行多行——行沿 x 推进，装回块宽
+    lines = wrap(zh_lines, (y1 - y0) - 2, min(b["size"], max(5.0, (x1 - x0) * 0.72)))
+    fs0 = min(b["size"], max(5.0, (x1 - x0) * 0.72))
+    lh = fs0 * 1.22
+    if len(lines) > 1:
+        fit_fs = (x1 - x0) / len(lines) * 0.95
+        if fit_fs < fs0:
+            fs0 = max(4.6, fit_fs)
+        lh = min(lh, (x1 - x0) / len(lines))
     for i, ln in enumerate(lines):
         if rot == 90:
-            x = x1 - 0.8 - i * lh
-            y = y1 - 1.0
-            pen.add_rot(x, y, ln, fs, 90, b["bold"], bc(b))
+            pen.add_rot(x1 - 0.8 - i * lh, y1 - 1.0, ln, fs0, 90, b["bold"], bc(b))
         else:
-            x = x0 + 0.8 + i * lh
-            y = y0 + 1.0
-            pen.add_rot(x, y, ln, fs, 270, b["bold"], bc(b))
+            pen.add_rot(x0 + 0.8 + i * lh, y0 + 1.0, ln, fs0, 270, b["bold"], bc(b))
 
 PMARK = re.compile(r"⟦P(\d+)⟧")
 
